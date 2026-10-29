@@ -37,15 +37,15 @@ bool I2cSlavePort_Init(uint16_t address)
     }
 
     const i2c_slave_config_t slaveCfg = {
-        .i2c_port = BICO_PROTOCOL_BRIDGE_I2C_SLAVE_PORT,
-        .sda_io_num = BICO_PROTOCOL_BRIDGE_I2C_SLAVE_SDA_PIN,
-        .scl_io_num = BICO_PROTOCOL_BRIDGE_I2C_SLAVE_SCL_PIN,
+        .i2c_port = BPB_I2C_SLAVE_PORT,
+        .sda_io_num = BPB_I2C_SLAVE_SDA_PIN,
+        .scl_io_num = BPB_I2C_SLAVE_SCL_PIN,
         .clk_source = I2C_CLK_SRC_DEFAULT,
-        .send_buf_depth = BICO_PROTOCOL_BRIDGE_I2C_SLAVE_TX_BUFFER_DEPTH,
-        .receive_buf_depth = BICO_PROTOCOL_BRIDGE_I2C_SLAVE_RX_BUFFER_DEPTH,
+        .send_buf_depth = BPB_I2C_SLAVE_TX_BUFFER_DEPTH,
+        .receive_buf_depth = BPB_I2C_SLAVE_RX_BUFFER_DEPTH,
         .slave_addr = address,
         .addr_bit_len = I2C_ADDR_BIT_LEN_7,
-        .flags.enable_internal_pullup = BICO_PROTOCOL_BRIDGE_I2C_SLAVE_INTERNAL_PULLUP,
+        .flags.enable_internal_pullup = BPB_I2C_SLAVE_INTERNAL_PULLUP,
     };
     if (i2c_new_slave_device(&slaveCfg, &slaveHandle) != ESP_OK)
     {
@@ -53,8 +53,8 @@ bool I2cSlavePort_Init(uint16_t address)
         return false;
     }
 
-    if (xTaskCreate(I2cSlavePort_RequestTask, "i2cSlaveReq", BICO_PROTOCOL_BRIDGE_I2C_SLAVE_TASK_STACK_SIZE, NULL,
-                    BICO_PROTOCOL_BRIDGE_I2C_SLAVE_TASK_PRIORITY, &requestTask) != pdPASS)
+    if (xTaskCreate(I2cSlavePort_RequestTask, "i2cSlaveReq", BPB_I2C_SLAVE_TASK_STACK_SIZE, NULL,
+                    BPB_I2C_SLAVE_TASK_PRIORITY, &requestTask) != pdPASS)
     {
         requestTask = NULL;
         I2cSlavePort_DeInit();

@@ -34,12 +34,12 @@ bool I2cMasterPort_Init(uint32_t speedHz)
     }
 
     const i2c_master_bus_config_t busCfg = {
-        .i2c_port = BICO_PROTOCOL_BRIDGE_I2C_MASTER_PORT,
-        .sda_io_num = BICO_PROTOCOL_BRIDGE_I2C_MASTER_SDA_PIN,
-        .scl_io_num = BICO_PROTOCOL_BRIDGE_I2C_MASTER_SCL_PIN,
+        .i2c_port = BPB_I2C_MASTER_PORT,
+        .sda_io_num = BPB_I2C_MASTER_SDA_PIN,
+        .scl_io_num = BPB_I2C_MASTER_SCL_PIN,
         .clk_source = I2C_CLK_SRC_DEFAULT,
-        .glitch_ignore_cnt = BICO_PROTOCOL_BRIDGE_I2C_MASTER_GLITCH_IGNORE_CNT,
-        .flags.enable_internal_pullup = BICO_PROTOCOL_BRIDGE_I2C_MASTER_INTERNAL_PULLUP,
+        .glitch_ignore_cnt = BPB_I2C_MASTER_GLITCH_IGNORE_CNT,
+        .flags.enable_internal_pullup = BPB_I2C_MASTER_INTERNAL_PULLUP,
     };
     if (i2c_new_master_bus(&busCfg, &busHandle) != ESP_OK)
     {
@@ -78,7 +78,7 @@ I2cMasterPort_Result_t I2cMasterPort_Write(uint16_t address, const uint8_t *pDat
 {
     if ((pData == NULL) || !I2cMasterPort_AcquireDevice(address))
     {
-        return I2CMASTERPORT_ERROR;
+        return BPB_I2CMASTERPORT_ERROR;
     }
     return I2cMasterPort_ToResult(i2c_master_transmit(devHandle, pData, length, (int)timeoutMs));
 }
@@ -87,7 +87,7 @@ I2cMasterPort_Result_t I2cMasterPort_Read(uint16_t address, uint8_t *pData, uint
 {
     if ((pData == NULL) || !I2cMasterPort_AcquireDevice(address))
     {
-        return I2CMASTERPORT_ERROR;
+        return BPB_I2CMASTERPORT_ERROR;
     }
     return I2cMasterPort_ToResult(i2c_master_receive(devHandle, pData, length, (int)timeoutMs));
 }
@@ -96,7 +96,7 @@ I2cMasterPort_Result_t I2cMasterPort_WriteRead(uint16_t address, const uint8_t *
 {
     if ((pWriteData == NULL) || (pReadData == NULL) || !I2cMasterPort_AcquireDevice(address))
     {
-        return I2CMASTERPORT_ERROR;
+        return BPB_I2CMASTERPORT_ERROR;
     }
     return I2cMasterPort_ToResult(i2c_master_transmit_receive(devHandle, pWriteData, writeLength, pReadData, readLength, (int)timeoutMs));
 }
@@ -129,7 +129,7 @@ static bool I2cMasterPort_AcquireDevice(uint16_t address)
         .dev_addr_length = I2C_ADDR_BIT_LEN_7,
         .device_address = address,
         .scl_speed_hz = busSpeedHz,
-        .scl_wait_us = BICO_PROTOCOL_BRIDGE_I2C_MASTER_SCL_WAIT_US,
+        .scl_wait_us = BPB_I2C_MASTER_SCL_WAIT_US,
     };
     if (i2c_master_bus_add_device(busHandle, &devCfg, &devHandle) != ESP_OK)
     {
@@ -153,7 +153,7 @@ static I2cMasterPort_Result_t I2cMasterPort_ToResult(esp_err_t error)
 {
     if (error == ESP_OK)
     {
-        return I2CMASTERPORT_OK;
+        return BPB_I2CMASTERPORT_OK;
     }
-    return (error == ESP_ERR_TIMEOUT) ? I2CMASTERPORT_TIMEOUT : I2CMASTERPORT_ERROR;
+    return (error == ESP_ERR_TIMEOUT) ? BPB_I2CMASTERPORT_TIMEOUT : BPB_I2CMASTERPORT_ERROR;
 }

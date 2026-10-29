@@ -29,16 +29,16 @@ bool SerialPort_Init(uint32_t baudrate, SerialPort_Parity_t parity, SerialPort_S
         return SerialPort_ApplyParameters(baudrate, parity, stopBits, dataBits);
     }
 
-    if (uart_driver_install(BICO_PROTOCOL_BRIDGE_SERIAL_UART_NUM, BICO_PROTOCOL_BRIDGE_SERIAL_RX_BUFFER_SIZE,
-                            BICO_PROTOCOL_BRIDGE_SERIAL_TX_BUFFER_SIZE, 0, NULL, 0) != ESP_OK)
+    if (uart_driver_install(BPB_SERIAL_UART_NUM, BPB_SERIAL_RX_BUFFER_SIZE,
+                            BPB_SERIAL_TX_BUFFER_SIZE, 0, NULL, 0) != ESP_OK)
     {
         return false;
     }
     uartInstalled = true;
 
     if (!SerialPort_ApplyParameters(baudrate, parity, stopBits, dataBits) ||
-        (uart_set_pin(BICO_PROTOCOL_BRIDGE_SERIAL_UART_NUM, BICO_PROTOCOL_BRIDGE_SERIAL_TX_PIN,
-                      BICO_PROTOCOL_BRIDGE_SERIAL_RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE) != ESP_OK))
+        (uart_set_pin(BPB_SERIAL_UART_NUM, BPB_SERIAL_TX_PIN,
+                      BPB_SERIAL_RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE) != ESP_OK))
     {
         SerialPort_DeInit();
         return false;
@@ -50,7 +50,7 @@ void SerialPort_DeInit(void)
 {
     if (uartInstalled)
     {
-        (void)uart_driver_delete(BICO_PROTOCOL_BRIDGE_SERIAL_UART_NUM);
+        (void)uart_driver_delete(BPB_SERIAL_UART_NUM);
         uartInstalled = false;
     }
 }
@@ -70,7 +70,7 @@ bool SerialPort_Write(const uint8_t *pData, uint16_t length)
     {
         return false;
     }
-    return (uart_write_bytes(BICO_PROTOCOL_BRIDGE_SERIAL_UART_NUM, (const char *)pData, length) >= 0);
+    return (uart_write_bytes(BPB_SERIAL_UART_NUM, (const char *)pData, length) >= 0);
 }
 
 bool SerialPort_WaitTxDone(uint32_t timeoutMs)
@@ -79,7 +79,7 @@ bool SerialPort_WaitTxDone(uint32_t timeoutMs)
     {
         return false;
     }
-    return (uart_wait_tx_done(BICO_PROTOCOL_BRIDGE_SERIAL_UART_NUM, pdMS_TO_TICKS(timeoutMs)) == ESP_OK);
+    return (uart_wait_tx_done(BPB_SERIAL_UART_NUM, pdMS_TO_TICKS(timeoutMs)) == ESP_OK);
 }
 
 bool SerialPort_Read(uint8_t *pData, uint16_t maxLength, uint16_t *pReadLength, uint32_t timeoutMs)
@@ -89,7 +89,7 @@ bool SerialPort_Read(uint8_t *pData, uint16_t maxLength, uint16_t *pReadLength, 
         return false;
     }
 
-    const int received = uart_read_bytes(BICO_PROTOCOL_BRIDGE_SERIAL_UART_NUM, pData, maxLength, pdMS_TO_TICKS(timeoutMs));
+    const int received = uart_read_bytes(BPB_SERIAL_UART_NUM, pData, maxLength, pdMS_TO_TICKS(timeoutMs));
     if (received < 0)
     {
         return false;
@@ -106,7 +106,7 @@ bool SerialPort_GetAvailable(uint16_t *pAvailable)
     }
 
     size_t buffered = 0U;
-    if (uart_get_buffered_data_len(BICO_PROTOCOL_BRIDGE_SERIAL_UART_NUM, &buffered) != ESP_OK)
+    if (uart_get_buffered_data_len(BPB_SERIAL_UART_NUM, &buffered) != ESP_OK)
     {
         return false;
     }
@@ -118,7 +118,7 @@ void SerialPort_FlushRx(void)
 {
     if (uartInstalled)
     {
-        (void)uart_flush_input(BICO_PROTOCOL_BRIDGE_SERIAL_UART_NUM);
+        (void)uart_flush_input(BPB_SERIAL_UART_NUM);
     }
 }
 
@@ -134,11 +134,11 @@ static bool SerialPort_ApplyParameters(uint32_t baudrate, SerialPort_Parity_t pa
     }
 
     uart_parity_t espParity = UART_PARITY_DISABLE;
-    if (parity == SERIALPORT_PARITY_EVEN)
+    if (parity == BPB_SERIALPORT_PARITY_EVEN)
     {
         espParity = UART_PARITY_EVEN;
     }
-    else if (parity == SERIALPORT_PARITY_ODD)
+    else if (parity == BPB_SERIALPORT_PARITY_ODD)
     {
         espParity = UART_PARITY_ODD;
     }
@@ -147,9 +147,9 @@ static bool SerialPort_ApplyParameters(uint32_t baudrate, SerialPort_Parity_t pa
         .baud_rate = (int)baudrate,
         .data_bits = espDataBits,
         .parity = espParity,
-        .stop_bits = (stopBits == SERIALPORT_STOPBITS_2) ? UART_STOP_BITS_2 : UART_STOP_BITS_1,
+        .stop_bits = (stopBits == BPB_SERIALPORT_STOPBITS_2) ? UART_STOP_BITS_2 : UART_STOP_BITS_1,
         .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
         .source_clk = UART_SCLK_DEFAULT,
     };
-    return (uart_param_config(BICO_PROTOCOL_BRIDGE_SERIAL_UART_NUM, &uartCfg) == ESP_OK);
+    return (uart_param_config(BPB_SERIAL_UART_NUM, &uartCfg) == ESP_OK);
 }

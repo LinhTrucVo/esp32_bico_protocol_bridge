@@ -20,8 +20,8 @@ static bool slaveInitialized = false;
 static volatile bool transferPending = false;
 static TaskHandle_t transferTask = NULL;
 static spi_slave_transaction_t transaction;
-static DMA_ATTR uint8_t txBuffer[SPISLAVEPORT_MAX_TRANSFER_SIZE];
-static DMA_ATTR uint8_t rxBuffer[SPISLAVEPORT_MAX_TRANSFER_SIZE];
+static DMA_ATTR uint8_t txBuffer[BPB_SPISLAVEPORT_MAX_TRANSFER_SIZE];
+static DMA_ATTR uint8_t rxBuffer[BPB_SPISLAVEPORT_MAX_TRANSFER_SIZE];
 static SpiSlavePort_SelectHandler_t selectHandler = NULL;
 static SpiSlavePort_TransferHandler_t transferHandler = NULL;
 
@@ -43,38 +43,38 @@ bool SpiSlavePort_Init(uint8_t mode, bool lsbFirst)
     }
 
     const spi_bus_config_t busCfg = {
-        .mosi_io_num = BICO_PROTOCOL_BRIDGE_SPI_SLAVE_MOSI_PIN,
-        .miso_io_num = BICO_PROTOCOL_BRIDGE_SPI_SLAVE_MISO_PIN,
-        .sclk_io_num = BICO_PROTOCOL_BRIDGE_SPI_SLAVE_SCLK_PIN,
+        .mosi_io_num = BPB_SPI_SLAVE_MOSI_PIN,
+        .miso_io_num = BPB_SPI_SLAVE_MISO_PIN,
+        .sclk_io_num = BPB_SPI_SLAVE_SCLK_PIN,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
     };
     const spi_slave_interface_config_t slaveCfg = {
         .mode = mode,
-        .spics_io_num = BICO_PROTOCOL_BRIDGE_SPI_SLAVE_CS_PIN,
-        .queue_size = BICO_PROTOCOL_BRIDGE_SPI_SLAVE_QUEUE_SIZE,
+        .spics_io_num = BPB_SPI_SLAVE_CS_PIN,
+        .queue_size = BPB_SPI_SLAVE_QUEUE_SIZE,
         .flags = lsbFirst ? SPI_SLAVE_BIT_LSBFIRST : 0,
         .post_setup_cb = SpiSlavePort_OnSetup,
         .post_trans_cb = SpiSlavePort_OnTransferDone,
     };
 
-    if (BICO_PROTOCOL_BRIDGE_SPI_SLAVE_INPUT_PULLUP)
+    if (BPB_SPI_SLAVE_INPUT_PULLUP)
     {
-        (void)gpio_set_pull_mode(BICO_PROTOCOL_BRIDGE_SPI_SLAVE_MOSI_PIN, GPIO_PULLUP_ONLY);
-        (void)gpio_set_pull_mode(BICO_PROTOCOL_BRIDGE_SPI_SLAVE_SCLK_PIN, GPIO_PULLUP_ONLY);
-        (void)gpio_set_pull_mode(BICO_PROTOCOL_BRIDGE_SPI_SLAVE_CS_PIN, GPIO_PULLUP_ONLY);
+        (void)gpio_set_pull_mode(BPB_SPI_SLAVE_MOSI_PIN, GPIO_PULLUP_ONLY);
+        (void)gpio_set_pull_mode(BPB_SPI_SLAVE_SCLK_PIN, GPIO_PULLUP_ONLY);
+        (void)gpio_set_pull_mode(BPB_SPI_SLAVE_CS_PIN, GPIO_PULLUP_ONLY);
     }
-    (void)gpio_set_drive_capability(BICO_PROTOCOL_BRIDGE_SPI_SLAVE_MISO_PIN, BICO_PROTOCOL_BRIDGE_SPI_SLAVE_MISO_DRIVE_CAP);
+    (void)gpio_set_drive_capability(BPB_SPI_SLAVE_MISO_PIN, BPB_SPI_SLAVE_MISO_DRIVE_CAP);
 
-    if (spi_slave_initialize(BICO_PROTOCOL_BRIDGE_SPI_SLAVE_HOST, &busCfg, &slaveCfg, BICO_PROTOCOL_BRIDGE_SPI_SLAVE_DMA_CHANNEL) != ESP_OK)
+    if (spi_slave_initialize(BPB_SPI_SLAVE_HOST, &busCfg, &slaveCfg, BPB_SPI_SLAVE_DMA_CHANNEL) != ESP_OK)
     {
         return false;
     }
     slaveInitialized = true;
     transferPending = false;
 
-    if (xTaskCreate(SpiSlavePort_TransferTask, "spiSlaveXfer", BICO_PROTOCOL_BRIDGE_SPI_SLAVE_TASK_STACK_SIZE, NULL,
-                    BICO_PROTOCOL_BRIDGE_SPI_SLAVE_TASK_PRIORITY, &transferTask) != pdPASS)
+    if (xTaskCreate(SpiSlavePort_TransferTask, "spiSlaveXfer", BPB_SPI_SLAVE_TASK_STACK_SIZE, NULL,
+                    BPB_SPI_SLAVE_TASK_PRIORITY, &transferTask) != pdPASS)
     {
         transferTask = NULL;
         SpiSlavePort_DeInit();
@@ -92,7 +92,7 @@ void SpiSlavePort_DeInit(void)
     }
     if (slaveInitialized)
     {
-        (void)spi_slave_free(BICO_PROTOCOL_BRIDGE_SPI_SLAVE_HOST);
+        (void)spi_slave_free(BPB_SPI_SLAVE_HOST);
         slaveInitialized = false;
     }
     transferPending = false;
@@ -102,7 +102,7 @@ void SpiSlavePort_DeInit(void)
 
 bool SpiSlavePort_QueueTransfer(const uint8_t *pTxData, uint16_t txLength, uint16_t maxLength)
 {
-    if (!slaveInitialized || transferPending || (maxLength == 0U) || (maxLength > SPISLAVEPORT_MAX_TRANSFER_SIZE) || (txLength > maxLength))
+    if (!slaveInitialized || transferPending || (maxLength == 0U) || (maxLength > BPB_SPISLAVEPORT_MAX_TRANSFER_SIZE) || (txLength > maxLength))
     {
         return false;
     }
@@ -120,7 +120,7 @@ bool SpiSlavePort_QueueTransfer(const uint8_t *pTxData, uint16_t txLength, uint1
     transaction.rx_buffer = rxBuffer;
 
     transferPending = true;
-    if (spi_slave_queue_trans(BICO_PROTOCOL_BRIDGE_SPI_SLAVE_HOST, &transaction, 0) != ESP_OK)
+    if (spi_slave_queue_trans(BPB_SPI_SLAVE_HOST, &transaction, 0) != ESP_OK)
     {
         transferPending = false;
         return false;
@@ -166,7 +166,7 @@ static void SpiSlavePort_TransferTask(void *pArg)
     for (;;)
     {
         spi_slave_transaction_t *pDone = NULL;
-        if (spi_slave_get_trans_result(BICO_PROTOCOL_BRIDGE_SPI_SLAVE_HOST, &pDone, portMAX_DELAY) != ESP_OK)
+        if (spi_slave_get_trans_result(BPB_SPI_SLAVE_HOST, &pDone, portMAX_DELAY) != ESP_OK)
         {
             continue;
         }

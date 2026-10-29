@@ -30,7 +30,7 @@ static bool GpioPort_IsValidOutputPin(uint8_t pin);
 //============================================================================
 bool GpioPort_Init(void)
 {
-    const esp_err_t result = gpio_install_isr_service(BICO_PROTOCOL_BRIDGE_GPIO_ISR_FLAGS);
+    const esp_err_t result = gpio_install_isr_service(BPB_GPIO_ISR_FLAGS);
     if (result == ESP_OK)
     {
         isrServiceInstalledByPort = true;
@@ -59,15 +59,15 @@ bool GpioPort_ConfigurePin(uint8_t pin, GpioPort_Mode_t mode, GpioPort_Pull_t pu
     gpio_config_t cfg = {0};
     cfg.pin_bit_mask = (1ULL << pin);
     cfg.intr_type = GPIO_INTR_DISABLE;
-    cfg.pull_up_en = (pull == GPIOPORT_PULL_UP) ? GPIO_PULLUP_ENABLE : GPIO_PULLUP_DISABLE;
-    cfg.pull_down_en = (pull == GPIOPORT_PULL_DOWN) ? GPIO_PULLDOWN_ENABLE : GPIO_PULLDOWN_DISABLE;
+    cfg.pull_up_en = (pull == BPB_GPIOPORT_PULL_UP) ? GPIO_PULLUP_ENABLE : GPIO_PULLUP_DISABLE;
+    cfg.pull_down_en = (pull == BPB_GPIOPORT_PULL_DOWN) ? GPIO_PULLDOWN_ENABLE : GPIO_PULLDOWN_DISABLE;
 
     switch (mode)
     {
-        case GPIOPORT_MODE_OUTPUT:
+        case BPB_GPIOPORT_MODE_OUTPUT:
             cfg.mode = GPIO_MODE_INPUT_OUTPUT; // input stays enabled so the level can be read back
             break;
-        case GPIOPORT_MODE_INPUT:
+        case BPB_GPIOPORT_MODE_INPUT:
             cfg.mode = GPIO_MODE_INPUT;
             break;
         default:
@@ -75,7 +75,7 @@ bool GpioPort_ConfigurePin(uint8_t pin, GpioPort_Mode_t mode, GpioPort_Pull_t pu
             break;
     }
 
-    if (mode == GPIOPORT_MODE_OUTPUT)
+    if (mode == BPB_GPIOPORT_MODE_OUTPUT)
     {
         (void)gpio_set_level((gpio_num_t)pin, initialHigh ? 1U : 0U);
     }
@@ -83,7 +83,7 @@ bool GpioPort_ConfigurePin(uint8_t pin, GpioPort_Mode_t mode, GpioPort_Pull_t pu
     {
         return false;
     }
-    if (mode == GPIOPORT_MODE_OUTPUT)
+    if (mode == BPB_GPIOPORT_MODE_OUTPUT)
     {
         (void)gpio_set_drive_capability((gpio_num_t)pin, (gpio_drive_cap_t)GpioPort_LimitDriveStrength(driveStrength));
     }
@@ -126,11 +126,11 @@ bool GpioPort_EnableInterrupt(uint8_t pin, GpioPort_Edge_t edge)
     }
 
     gpio_int_type_t espEdge = GPIO_INTR_ANYEDGE;
-    if (edge == GPIOPORT_EDGE_RISING)
+    if (edge == BPB_GPIOPORT_EDGE_RISING)
     {
         espEdge = GPIO_INTR_POSEDGE;
     }
-    else if (edge == GPIOPORT_EDGE_FALLING)
+    else if (edge == BPB_GPIOPORT_EDGE_FALLING)
     {
         espEdge = GPIO_INTR_NEGEDGE;
     }
@@ -171,7 +171,7 @@ static void IRAM_ATTR GpioPort_OnIsr(void *pArg)
 
 static uint8_t GpioPort_LimitDriveStrength(uint8_t driveStrength)
 {
-    return (driveStrength > BICO_PROTOCOL_BRIDGE_GPIO_MAX_DRIVE_LEVEL) ? (uint8_t)BICO_PROTOCOL_BRIDGE_GPIO_MAX_DRIVE_LEVEL : driveStrength;
+    return (driveStrength > BPB_GPIO_MAX_DRIVE_LEVEL) ? (uint8_t)BPB_GPIO_MAX_DRIVE_LEVEL : driveStrength;
 }
 
 static bool GpioPort_IsValidPin(uint8_t pin)

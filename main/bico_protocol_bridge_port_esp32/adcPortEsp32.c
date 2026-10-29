@@ -33,7 +33,7 @@ bool AdcPort_Init(void)
     }
 
     const adc_oneshot_unit_init_cfg_t unitCfg = {
-        .unit_id = BICO_PROTOCOL_BRIDGE_ADC_UNIT,
+        .unit_id = BPB_ADC_UNIT,
     };
     return (adc_oneshot_new_unit(&unitCfg, &adcHandle) == ESP_OK);
 }
@@ -56,21 +56,21 @@ void AdcPort_DeInit(void)
 
 bool AdcPort_ConfigureChannel(uint8_t channel)
 {
-    if ((adcHandle == NULL) || (channel >= BICO_PROTOCOL_BRIDGE_ADC_NUM_CHANNELS))
+    if ((adcHandle == NULL) || (channel >= BPB_ADC_NUM_CHANNELS))
     {
         return false;
     }
 
     const adc_oneshot_chan_cfg_t chanCfg = {
-        .atten = BICO_PROTOCOL_BRIDGE_ADC_ATTEN,
-        .bitwidth = BICO_PROTOCOL_BRIDGE_ADC_BITWIDTH,
+        .atten = BPB_ADC_ATTEN,
+        .bitwidth = BPB_ADC_BITWIDTH,
     };
     return (adc_oneshot_config_channel(adcHandle, (adc_channel_t)channel, &chanCfg) == ESP_OK);
 }
 
 bool AdcPort_ReadRaw(uint8_t channel, uint16_t *pRawValue)
 {
-    if ((adcHandle == NULL) || (pRawValue == NULL) || (channel >= BICO_PROTOCOL_BRIDGE_ADC_NUM_CHANNELS))
+    if ((adcHandle == NULL) || (pRawValue == NULL) || (channel >= BPB_ADC_NUM_CHANNELS))
     {
         return false;
     }
@@ -86,7 +86,7 @@ bool AdcPort_ReadRaw(uint8_t channel, uint16_t *pRawValue)
 
 bool AdcPort_StartPeriodicSampling(uint8_t channel, uint32_t frequencyHz)
 {
-    if ((adcHandle == NULL) || (frequencyHz == 0U) || (channel >= BICO_PROTOCOL_BRIDGE_ADC_NUM_CHANNELS))
+    if ((adcHandle == NULL) || (frequencyHz == 0U) || (channel >= BPB_ADC_NUM_CHANNELS))
     {
         return false;
     }

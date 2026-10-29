@@ -33,18 +33,18 @@ bool SpiMasterPort_Init(uint32_t clockHz, uint8_t mode, bool lsbFirst)
     }
 
     const spi_bus_config_t busCfg = {
-        .mosi_io_num = BICO_PROTOCOL_BRIDGE_SPI_MASTER_MOSI_PIN,
-        .miso_io_num = BICO_PROTOCOL_BRIDGE_SPI_MASTER_MISO_PIN,
-        .sclk_io_num = BICO_PROTOCOL_BRIDGE_SPI_MASTER_SCLK_PIN,
+        .mosi_io_num = BPB_SPI_MASTER_MOSI_PIN,
+        .miso_io_num = BPB_SPI_MASTER_MISO_PIN,
+        .sclk_io_num = BPB_SPI_MASTER_SCLK_PIN,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
-        .max_transfer_sz = BICO_PROTOCOL_BRIDGE_SPI_MASTER_MAX_TRANSFER_SIZE,
+        .max_transfer_sz = BPB_SPI_MASTER_MAX_TRANSFER_SIZE,
     };
-    if (BICO_PROTOCOL_BRIDGE_SPI_MASTER_MISO_PULLUP)
+    if (BPB_SPI_MASTER_MISO_PULLUP)
     {
-        (void)gpio_set_pull_mode(BICO_PROTOCOL_BRIDGE_SPI_MASTER_MISO_PIN, GPIO_PULLUP_ONLY);
+        (void)gpio_set_pull_mode(BPB_SPI_MASTER_MISO_PIN, GPIO_PULLUP_ONLY);
     }
-    if (spi_bus_initialize(BICO_PROTOCOL_BRIDGE_SPI_MASTER_HOST, &busCfg, BICO_PROTOCOL_BRIDGE_SPI_MASTER_DMA_CHANNEL) != ESP_OK)
+    if (spi_bus_initialize(BPB_SPI_MASTER_HOST, &busCfg, BPB_SPI_MASTER_DMA_CHANNEL) != ESP_OK)
     {
         return false;
     }
@@ -63,7 +63,7 @@ void SpiMasterPort_DeInit(void)
     SpiMasterPort_RemoveDevice();
     if (busInitialized)
     {
-        (void)spi_bus_free(BICO_PROTOCOL_BRIDGE_SPI_MASTER_HOST);
+        (void)spi_bus_free(BPB_SPI_MASTER_HOST);
         busInitialized = false;
     }
 }
@@ -118,18 +118,18 @@ static bool SpiMasterPort_AddDevice(uint32_t clockHz, uint8_t mode, bool lsbFirs
 {
     spi_device_interface_config_t devCfg = {
         .clock_speed_hz = (int)clockHz,
-        .duty_cycle_pos = BICO_PROTOCOL_BRIDGE_SPI_MASTER_DUTY_CYCLE_POS,
+        .duty_cycle_pos = BPB_SPI_MASTER_DUTY_CYCLE_POS,
         .mode = mode,
-        .spics_io_num = BICO_PROTOCOL_BRIDGE_SPI_MASTER_CS_PIN,
-        .cs_ena_posttrans = BICO_PROTOCOL_BRIDGE_SPI_MASTER_CS_POST_TRANS_CYCLES,
-        .queue_size = BICO_PROTOCOL_BRIDGE_SPI_MASTER_QUEUE_SIZE,
+        .spics_io_num = BPB_SPI_MASTER_CS_PIN,
+        .cs_ena_posttrans = BPB_SPI_MASTER_CS_POST_TRANS_CYCLES,
+        .queue_size = BPB_SPI_MASTER_QUEUE_SIZE,
     };
     if (lsbFirst)
     {
         devCfg.flags |= SPI_DEVICE_BIT_LSBFIRST;
     }
 
-    if (spi_bus_add_device(BICO_PROTOCOL_BRIDGE_SPI_MASTER_HOST, &devCfg, &deviceHandle) != ESP_OK)
+    if (spi_bus_add_device(BPB_SPI_MASTER_HOST, &devCfg, &deviceHandle) != ESP_OK)
     {
         deviceHandle = NULL;
         return false;

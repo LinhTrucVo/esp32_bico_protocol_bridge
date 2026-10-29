@@ -14,8 +14,8 @@
 //============================================================================
 // Local Macros
 //============================================================================
-#define NVM_PORT_KEY_SIZE   16U
-#define NVM_PORT_ERASED     0xFFU
+#define BPB_NVM_PORT_KEY_SIZE   16U
+#define BPB_NVM_PORT_ERASED     0xFFU
 
 //============================================================================
 // Local Function Prototypes
@@ -50,22 +50,22 @@ bool NvmPort_Read(uint32_t offset, uint8_t *pData, uint32_t length)
     }
 
     nvs_handle_t handle;
-    if (nvs_open(BICO_PROTOCOL_BRIDGE_NVM_NAMESPACE, NVS_READONLY, &handle) != ESP_OK)
+    if (nvs_open(BPB_NVM_NAMESPACE, NVS_READONLY, &handle) != ESP_OK)
     {
         // Nothing was stored yet, so the namespace does not exist and everything reads as erased.
-        (void)memset(pData, NVM_PORT_ERASED, length);
+        (void)memset(pData, BPB_NVM_PORT_ERASED, length);
         return true;
     }
 
-    uint8_t chunk[BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE];
+    uint8_t chunk[BPB_NVM_CHUNK_SIZE];
     bool done = true;
     uint32_t position = 0U;
     while (done && (position < length))
     {
         const uint32_t address = offset + position;
-        const uint32_t chunkIndex = address / BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE;
-        const uint32_t chunkOffset = address % BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE;
-        uint32_t count = BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE - chunkOffset;
+        const uint32_t chunkIndex = address / BPB_NVM_CHUNK_SIZE;
+        const uint32_t chunkOffset = address % BPB_NVM_CHUNK_SIZE;
+        uint32_t count = BPB_NVM_CHUNK_SIZE - chunkOffset;
         if (count > (length - position))
         {
             count = length - position;
@@ -91,21 +91,21 @@ bool NvmPort_Write(uint32_t offset, const uint8_t *pData, uint32_t length)
     }
 
     nvs_handle_t handle;
-    if (nvs_open(BICO_PROTOCOL_BRIDGE_NVM_NAMESPACE, NVS_READWRITE, &handle) != ESP_OK)
+    if (nvs_open(BPB_NVM_NAMESPACE, NVS_READWRITE, &handle) != ESP_OK)
     {
         return false;
     }
 
-    uint8_t chunk[BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE];
-    char key[NVM_PORT_KEY_SIZE];
+    uint8_t chunk[BPB_NVM_CHUNK_SIZE];
+    char key[BPB_NVM_PORT_KEY_SIZE];
     bool done = true;
     uint32_t position = 0U;
     while (done && (position < length))
     {
         const uint32_t address = offset + position;
-        const uint32_t chunkIndex = address / BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE;
-        const uint32_t chunkOffset = address % BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE;
-        uint32_t count = BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE - chunkOffset;
+        const uint32_t chunkIndex = address / BPB_NVM_CHUNK_SIZE;
+        const uint32_t chunkOffset = address % BPB_NVM_CHUNK_SIZE;
+        uint32_t count = BPB_NVM_CHUNK_SIZE - chunkOffset;
         if (count > (length - position))
         {
             count = length - position;
@@ -116,7 +116,7 @@ bool NvmPort_Write(uint32_t offset, const uint8_t *pData, uint32_t length)
         {
             (void)memcpy(&chunk[chunkOffset], &pData[position], count);
             NvmPort_MakeKey(chunkIndex, key);
-            done = (nvs_set_blob(handle, key, chunk, BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE) == ESP_OK);
+            done = (nvs_set_blob(handle, key, chunk, BPB_NVM_CHUNK_SIZE) == ESP_OK);
         }
         position += count;
     }
@@ -132,28 +132,28 @@ bool NvmPort_Write(uint32_t offset, const uint8_t *pData, uint32_t length)
 bool NvmPort_Erase(uint32_t offset, uint32_t length)
 {
     nvs_handle_t handle;
-    if (nvs_open(BICO_PROTOCOL_BRIDGE_NVM_NAMESPACE, NVS_READWRITE, &handle) != ESP_OK)
+    if (nvs_open(BPB_NVM_NAMESPACE, NVS_READWRITE, &handle) != ESP_OK)
     {
         return false;
     }
 
-    uint8_t chunk[BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE];
-    char key[NVM_PORT_KEY_SIZE];
+    uint8_t chunk[BPB_NVM_CHUNK_SIZE];
+    char key[BPB_NVM_PORT_KEY_SIZE];
     bool done = true;
     uint32_t position = 0U;
     while (done && (position < length))
     {
         const uint32_t address = offset + position;
-        const uint32_t chunkIndex = address / BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE;
-        const uint32_t chunkOffset = address % BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE;
-        uint32_t count = BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE - chunkOffset;
+        const uint32_t chunkIndex = address / BPB_NVM_CHUNK_SIZE;
+        const uint32_t chunkOffset = address % BPB_NVM_CHUNK_SIZE;
+        uint32_t count = BPB_NVM_CHUNK_SIZE - chunkOffset;
         if (count > (length - position))
         {
             count = length - position;
         }
 
         NvmPort_MakeKey(chunkIndex, key);
-        if (count == BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE)
+        if (count == BPB_NVM_CHUNK_SIZE)
         {
             const esp_err_t result = nvs_erase_key(handle, key);
             done = (result == ESP_OK) || (result == ESP_ERR_NVS_NOT_FOUND);
@@ -163,8 +163,8 @@ bool NvmPort_Erase(uint32_t offset, uint32_t length)
             done = NvmPort_LoadChunk(handle, chunkIndex, chunk);
             if (done)
             {
-                (void)memset(&chunk[chunkOffset], NVM_PORT_ERASED, count);
-                done = (nvs_set_blob(handle, key, chunk, BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE) == ESP_OK);
+                (void)memset(&chunk[chunkOffset], BPB_NVM_PORT_ERASED, count);
+                done = (nvs_set_blob(handle, key, chunk, BPB_NVM_CHUNK_SIZE) == ESP_OK);
             }
         }
         position += count;
@@ -183,21 +183,21 @@ bool NvmPort_Erase(uint32_t offset, uint32_t length)
 //============================================================================
 static void NvmPort_MakeKey(uint32_t chunkIndex, char *pKey)
 {
-    (void)snprintf(pKey, NVM_PORT_KEY_SIZE, "c%05lu", (unsigned long)chunkIndex);
+    (void)snprintf(pKey, BPB_NVM_PORT_KEY_SIZE, "c%05lu", (unsigned long)chunkIndex);
 }
 
 // A chunk that was never written or that was erased reads as 0xFF.
 static bool NvmPort_LoadChunk(nvs_handle_t handle, uint32_t chunkIndex, uint8_t *pChunk)
 {
-    char key[NVM_PORT_KEY_SIZE];
+    char key[BPB_NVM_PORT_KEY_SIZE];
     NvmPort_MakeKey(chunkIndex, key);
 
-    size_t size = BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE;
+    size_t size = BPB_NVM_CHUNK_SIZE;
     const esp_err_t result = nvs_get_blob(handle, key, pChunk, &size);
     if (result == ESP_ERR_NVS_NOT_FOUND)
     {
-        (void)memset(pChunk, NVM_PORT_ERASED, BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE);
+        (void)memset(pChunk, BPB_NVM_PORT_ERASED, BPB_NVM_CHUNK_SIZE);
         return true;
     }
-    return (result == ESP_OK) && (size == BICO_PROTOCOL_BRIDGE_NVM_CHUNK_SIZE);
+    return (result == ESP_OK) && (size == BPB_NVM_CHUNK_SIZE);
 }

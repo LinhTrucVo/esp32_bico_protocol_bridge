@@ -12,13 +12,13 @@
 //============================================================================
 // Local Macros
 //============================================================================
-#define PWM_PORT_DUTY_STEPS         (1UL << BICO_PROTOCOL_BRIDGE_PWM_DUTY_BITS)
-#define PWM_PORT_NUM_CHANNELS       (sizeof(pwmPins) / sizeof(pwmPins[0]))
+#define BPB_PWM_PORT_DUTY_STEPS         (1UL << BPB_PWM_DUTY_BITS)
+#define BPB_PWM_PORT_NUM_CHANNELS       (sizeof(pwmPins) / sizeof(pwmPins[0]))
 
 //============================================================================
 // Variables
 //============================================================================
-static const int pwmPins[] = BICO_PROTOCOL_BRIDGE_PWM_CHANNEL_PINS;
+static const int pwmPins[] = BPB_PWM_CHANNEL_PINS;
 static uint16_t pwmDuty[LEDC_CHANNEL_MAX] = {0};
 static bool pwmConfigured[LEDC_CHANNEL_MAX] = {false};
 
@@ -41,11 +41,11 @@ bool PwmPort_Init(void)
 
 void PwmPort_DeInit(void)
 {
-    for (uint8_t i = 0U; i < (uint8_t)PWM_PORT_NUM_CHANNELS; i++)
+    for (uint8_t i = 0U; i < (uint8_t)BPB_PWM_PORT_NUM_CHANNELS; i++)
     {
         if (pwmConfigured[i])
         {
-            (void)ledc_stop(BICO_PROTOCOL_BRIDGE_PWM_SPEED_MODE, (ledc_channel_t)i, 0);
+            (void)ledc_stop(BPB_PWM_SPEED_MODE, (ledc_channel_t)i, 0);
             pwmConfigured[i] = false;
         }
     }
@@ -59,9 +59,9 @@ bool PwmPort_ConfigureChannel(uint8_t channel, uint32_t frequencyHz, uint16_t du
     }
 
     const ledc_timer_config_t timerCfg = {
-        .speed_mode = BICO_PROTOCOL_BRIDGE_PWM_SPEED_MODE,
+        .speed_mode = BPB_PWM_SPEED_MODE,
         .timer_num = (ledc_timer_t)channel,
-        .duty_resolution = (ledc_timer_bit_t)BICO_PROTOCOL_BRIDGE_PWM_DUTY_BITS,
+        .duty_resolution = (ledc_timer_bit_t)BPB_PWM_DUTY_BITS,
         .freq_hz = frequencyHz,
         .clk_cfg = LEDC_AUTO_CLK,
     };
@@ -71,7 +71,7 @@ bool PwmPort_ConfigureChannel(uint8_t channel, uint32_t frequencyHz, uint16_t du
     }
 
     ledc_channel_config_t chanCfg = {
-        .speed_mode = BICO_PROTOCOL_BRIDGE_PWM_SPEED_MODE,
+        .speed_mode = BPB_PWM_SPEED_MODE,
         .channel = (ledc_channel_t)channel,
         .timer_sel = (ledc_timer_t)channel,
         .intr_type = LEDC_INTR_DISABLE,
@@ -96,7 +96,7 @@ bool PwmPort_SetFrequency(uint8_t channel, uint32_t frequencyHz)
     {
         return false;
     }
-    return (ledc_set_freq(BICO_PROTOCOL_BRIDGE_PWM_SPEED_MODE, (ledc_timer_t)channel, frequencyHz) == ESP_OK);
+    return (ledc_set_freq(BPB_PWM_SPEED_MODE, (ledc_timer_t)channel, frequencyHz) == ESP_OK);
 }
 
 bool PwmPort_SetDuty(uint8_t channel, uint16_t duty)
@@ -125,7 +125,7 @@ bool PwmPort_Stop(uint8_t channel)
     {
         return false;
     }
-    return (ledc_stop(BICO_PROTOCOL_BRIDGE_PWM_SPEED_MODE, (ledc_channel_t)channel, 0) == ESP_OK);
+    return (ledc_stop(BPB_PWM_SPEED_MODE, (ledc_channel_t)channel, 0) == ESP_OK);
 }
 
 //============================================================================
@@ -133,17 +133,17 @@ bool PwmPort_Stop(uint8_t channel)
 //============================================================================
 static bool PwmPort_IsValidChannel(uint8_t channel)
 {
-    return (channel < PWM_PORT_NUM_CHANNELS) && (channel < (uint8_t)LEDC_CHANNEL_MAX) && (channel < (uint8_t)LEDC_TIMER_MAX);
+    return (channel < BPB_PWM_PORT_NUM_CHANNELS) && (channel < (uint8_t)LEDC_CHANNEL_MAX) && (channel < (uint8_t)LEDC_TIMER_MAX);
 }
 
 static uint32_t PwmPort_DutyToTicks(uint16_t duty)
 {
-    const uint32_t maxTicks = PWM_PORT_DUTY_STEPS - 1UL;
-    return ((uint32_t)duty * maxTicks) / (uint32_t)PWMPORT_DUTY_MAX;
+    const uint32_t maxTicks = BPB_PWM_PORT_DUTY_STEPS - 1UL;
+    return ((uint32_t)duty * maxTicks) / (uint32_t)BPB_PWMPORT_DUTY_MAX;
 }
 
 static bool PwmPort_ApplyDuty(uint8_t channel)
 {
-    return (ledc_set_duty(BICO_PROTOCOL_BRIDGE_PWM_SPEED_MODE, (ledc_channel_t)channel, PwmPort_DutyToTicks(pwmDuty[channel])) == ESP_OK) &&
-           (ledc_update_duty(BICO_PROTOCOL_BRIDGE_PWM_SPEED_MODE, (ledc_channel_t)channel) == ESP_OK);
+    return (ledc_set_duty(BPB_PWM_SPEED_MODE, (ledc_channel_t)channel, PwmPort_DutyToTicks(pwmDuty[channel])) == ESP_OK) &&
+           (ledc_update_duty(BPB_PWM_SPEED_MODE, (ledc_channel_t)channel) == ESP_OK);
 }
